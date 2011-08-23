@@ -2,12 +2,17 @@
 
 require 'sqlite3'
 
-def sanitize_tags(tags=[])
+# sanitize tags
+# @param list of tags
+# @return [String] sorted string of unique tags in lowercase 
+def sanitize_tags(tags=Array.new)
 	tags.map! {|x| x.downcase }
 	tags.sort!.uniq.join(' ')
 end
 
 
+# parsing the actual time
+# @return [Array] containing year, month
 def parse_date
 		now = Time.now
 		t = ARGV.shift
@@ -21,6 +26,7 @@ def parse_date
 		return jahr, monat
 end
 
+# display the usage and exit
 def usage
 	puts <<EOU
 Usage:	ausgaben {j,c,w}[g]add BETRAG [TAGS]
@@ -31,6 +37,9 @@ EOU
 	exit
 end
 
+# parsing name obtained from first commandline argument
+# if no name of "jo caro wir" is found, jo is assumed
+# @return [String] the current name to which actions apply 
 def parse_name
 	name = ARGV.shift
 	unless %w(jo caro wir).include?(name)
@@ -40,8 +49,8 @@ def parse_name
 	return name
 end
 
-
-
+# parsing all the options from commandline
+# @return [Hash] with :modus, :betrag, :tags, :jahr, :monat, and :name
 def parse_options
 main_opts = %w(jadd cadd jgadd cgadd wadd sum list ausgleich)
 betrag_opts = %w(jadd cadd jgadd cgadd wadd)
@@ -70,16 +79,22 @@ betrag_opts = %w(jadd cadd jgadd cgadd wadd)
 	return options
 end
 
-
+# Class providing special methods to interact with database
 class Ausgaben
+	# short for johannes
 	JOHANNES="jo"
+	#short for caro
 	CARO="caro"
+	#short for wir
 	WIR="wir"
 
+	# initialize the class
+	# @param opts the option hash obtained via parse_options
 	def initialize(opts={})
 		@db =  SQLite3::Database.new("/home/jo/dokumente/Ausgaben/ausgaben.db")
 
 		@options = opts
+		# lets do some metaprogramming and create a method for each possible action
 		%w(jadd cadd jgadd cgadd wadd).each do |name|
 				n = JOHANNES
 				n = CARO if name[0] == 'c'
@@ -111,11 +126,15 @@ class Ausgaben
 
 private 	
 
+	# insert a new entry into ausgaben
+	# using the options 
 	def insert()
 		@db.execute("insert into ausgaben (jahr, monat, name, betrag, gemeinsam, tags) values(:jahr, :monat, :name, :betrag, :gemeinsam, :tags)", @options)
 	end
 
 
+	# calculates the sum for the given options (month, year and name)
+	# Sum is printed directly
 	def sum
 		printf("%02i.%i\n", @options[:monat], @options[:jahr])
 		@db.execute("select summe, gemeinsam from sum_#{@options[:name]} where jahr = #{@options[:jahr]} and monat = #{@options[:monat]} ") do |row|
@@ -123,6 +142,8 @@ private
 		end
 	end
 
+	# create a list of ausgaben for the given options (month, year and name)
+	# List is printed directly
 	def list
 		printf("%02i.%i\n", @options[:monat], @options[:jahr])
 		@db.execute("select betrag, gemeinsam, tags from ausgaben_#{@options[:name]} where jahr = #{@options[:jahr]} and monat = #{@options[:monat]} order by jahr, monat, gemeinsam desc") do |row|
@@ -130,6 +151,8 @@ private
 		end
 	end
 	
+	# calculate the "Ausgleichzahlung" based on the entries for the given month, year
+	# Ausgleich is printed directly
 	def ausgleich
 		sums = {}
 		%w(jo caro).each do |who|
