@@ -1,4 +1,8 @@
-#!/usr/bin/ruby 
+#!/usr/bin/env ruby 
+# encoding=utf-8
+# personal ausgaben tracker
+# This script is written and maintained by Johnnes Held
+# USE AT OWN RISK
 
 require 'sqlite3'
 
@@ -91,7 +95,7 @@ class Ausgaben
 	# initialize the class
 	# @param opts the option hash obtained via parse_options
 	def initialize(opts={})
-		@db =  SQLite3::Database.new("/home/jo/dokumente/Ausgaben/ausgaben.db")
+		@db =  SQLite3::Database.new(File.expand_path("~")+"/Documents/Ausgaben/ausgaben.db")
 
 		@options = opts
 		# lets do some metaprogramming and create a method for each possible action
