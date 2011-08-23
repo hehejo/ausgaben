@@ -1,4 +1,8 @@
-#!/usr/bin/ruby 
+#!/usr/bin/env ruby 
+# encoding=utf-8
+# personal ausgaben tracker
+# This script is written and maintained by Johnnes Held
+# USE AT OWN RISK
 
 require 'sqlite3'
 
@@ -77,7 +81,7 @@ class Ausgaben
 	WIR="wir"
 
 	def initialize(opts={})
-		@db =  SQLite3::Database.new("/home/jo/dokumente/Ausgaben/ausgaben.db")
+		@db =  SQLite3::Database.new(File.expand_path("~")+"/Documents/Ausgaben/ausgaben.db")
 
 		@options = opts
 		%w(jadd cadd jgadd cgadd wadd).each do |name|
